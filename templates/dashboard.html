@@ -6,6 +6,10 @@
   <body>
     <h1>Welcome, {{ twitch_username }}!</h1>
     <p>You are logged in with Twitch.</p>
+    <p>Debug: {{ twitch_data }}</p>
+    <p>
+      Your Donation Page: <a href="{{ donation_url }}">{{ donation_url }}</a>
+    </p>
     <form method="post" action="{% url 'account_logout' %}">
       {% csrf_token %}
       <button type="submit">Logout</button>
