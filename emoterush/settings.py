@@ -116,5 +116,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-ACCOUNT_SIGNUP_FIELDS = ['username*', 'password1*', 'password2*']  # No email
+ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_ONLY = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
