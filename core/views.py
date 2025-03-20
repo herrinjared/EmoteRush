@@ -7,7 +7,6 @@ from django.conf import settings
 from django.urls import reverse
 from .models import Donation
 
-# Configure PayPal SDK
 paypalrestsdk.configure({
     "mode": "sandbox",
     "client_id": settings.PAYPAL_CLIENT_ID,
@@ -32,7 +31,7 @@ def donate(request, streamer_username):
     streamer_name = streamer.socialaccount_set.first().extra_data['display_name']
     if request.method == 'POST':
         amount = float(request.POST.get('amount', 0))
-        processing_fee = (amount * 0.029) + 0.30  # PayPal fee
+        processing_fee = (amount * 0.029) + 0.30
         total_charge = amount + processing_fee
         payment = paypalrestsdk.Payment({
             "intent": "sale",
@@ -50,6 +49,7 @@ def donate(request, streamer_username):
             request.session['donation'] = {
                 'streamer_id': streamer.id,
                 'amount': amount,
+                'processing_fee': processing_fee,
                 'anonymous': request.POST.get('anonymous', 'off') == 'on'
             }
             return redirect(next((link.href for link in payment.links if link.rel == "approval_url"), None))
@@ -72,11 +72,14 @@ def payment_execute(request):
             payment_id=payment_id,
             anonymous=donation_data['anonymous']
         )
+        total_paid = donation.amount + donation.processing_fee  # Explicitly calculate
         return render(request, 'payment_success.html', {
             'donor_name': 'Anonymous' if donation.anonymous else donor_twitch,
             'streamer_name': streamer.socialaccount_set.first().extra_data['display_name'],
             'amount': donation.amount,
-            'net_to_streamer': donation.net_to_streamer
+            'total_paid': total_paid,
+            'net_to_streamer': donation.net_to_streamer,
+            'emoterush_fee': donation.emoterush_fee
         })
     return render(request, 'payment_error.html', {'error': payment.error})
 
