@@ -5,7 +5,7 @@ from allauth.socialaccount.models import SocialAccount
 import paypalrestsdk
 from django.conf import settings
 from django.urls import reverse
-from .models import Donation
+from .models import Donation, UserEmote  # Add UserEmote
 
 paypalrestsdk.configure({
     "mode": "sandbox",
@@ -19,10 +19,12 @@ def dashboard(request):
     twitch_data = twitch_account.extra_data if twitch_account else {}
     username = twitch_data.get('display_name', 'Guest')
     donation_url = reverse('donate', args=[twitch_data.get('login', 'unknown')])
+    user_emotes = UserEmote.objects.filter(user=request.user).select_related('emote_type')
     return render(request, 'dashboard.html', {
         'twitch_username': username,
         'twitch_data': twitch_data,
-        'donation_url': request.build_absolute_uri(donation_url)
+        'donation_url': request.build_absolute_uri(donation_url),
+        'user_emotes': user_emotes
     })
 
 @login_required
@@ -73,7 +75,7 @@ def payment_execute(request):
             anonymous=donation_data['anonymous']
         )
         total_paid = donation.amount + donation.processing_fee
-        unlocked_emotes = donation.roll_for_emotes()  # Roll for emotes
+        unlocked_emotes = donation.roll_for_emotes()
         return render(request, 'payment_success.html', {
             'donor_name': 'Anonymous' if donation.anonymous else donor_twitch,
             'streamer_name': streamer.socialaccount_set.first().extra_data['display_name'],
