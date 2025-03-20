@@ -72,14 +72,16 @@ def payment_execute(request):
             payment_id=payment_id,
             anonymous=donation_data['anonymous']
         )
-        total_paid = donation.amount + donation.processing_fee  # Explicitly calculate
+        total_paid = donation.amount + donation.processing_fee
+        unlocked_emotes = donation.roll_for_emotes()  # Roll for emotes
         return render(request, 'payment_success.html', {
             'donor_name': 'Anonymous' if donation.anonymous else donor_twitch,
             'streamer_name': streamer.socialaccount_set.first().extra_data['display_name'],
             'amount': donation.amount,
             'total_paid': total_paid,
             'net_to_streamer': donation.net_to_streamer,
-            'emoterush_fee': donation.emoterush_fee
+            'emoterush_fee': donation.emoterush_fee,
+            'unlocked_emotes': unlocked_emotes
         })
     return render(request, 'payment_error.html', {'error': payment.error})
 

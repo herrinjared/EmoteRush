@@ -5,10 +5,20 @@
   </head>
   <body>
     <h1>Donation Successful!</h1>
-    <p>{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }} (total ${{ total_paid|floatformat:2 }} with payment processing fees).</p>
+    <p>{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }}.</p>
+    <p>Total with fees: ${{ total_paid|floatformat:2 }}.</p>
     <p>{{ streamer_name }} receives ${{ net_to_streamer|floatformat:2 }}.</p>
     <p>EmoteRush receives ${{ emoterush_fee|floatformat:2 }}.</p>
-    <p>Emote unlocks coming soon!</p>
+    {% if unlocked_emotes %}
+    <h2>You Unlocked Emotes!</h2>
+    <ul>
+      {% for emote in unlocked_emotes %}
+      <li>{{ emote.emote_type.name }} ({{ emote.emote_type.rarity }})</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No emotes unlocked this time—try again!</p>
+    {% endif %}
     <a href="{% url 'dashboard' %}">Back to Dashboard</a>
   </body>
 </html>
