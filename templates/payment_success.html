@@ -5,7 +5,7 @@
   </head>
   <body>
     <h1>Donation Successful!</h1>
-    <p>{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }} (total ${{ total_paid|floatformat:2 }} with fees).</p>
+    <p>{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }} (total ${{ total_paid|floatformat:2 }} with payment processing fees).</p>
     <p>{{ streamer_name }} receives ${{ net_to_streamer|floatformat:2 }}.</p>
     <p>EmoteRush receives ${{ emoterush_fee|floatformat:2 }}.</p>
     <p>Emote unlocks coming soon!</p>
