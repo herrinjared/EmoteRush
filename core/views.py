@@ -5,6 +5,7 @@ from allauth.socialaccount.models import SocialAccount
 import paypalrestsdk
 from django.conf import settings
 from django.urls import reverse
+from .models import Donation
 
 # Configure PayPal SDK
 paypalrestsdk.configure({
@@ -62,8 +63,21 @@ def payment_execute(request):
     payment = paypalrestsdk.Payment.find(payment_id)
     if payment.execute({"payer_id": payer_id}):
         donation_data = request.session.pop('donation', {})
-        # Save donation (Step 6.3 will add this)
-        return render(request, 'payment_success.html', {'amount': donation_data['amount']})
+        donor_twitch = request.user.socialaccount_set.first().extra_data['display_name']
+        streamer = User.objects.get(id=donation_data['streamer_id'])
+        donation = Donation.objects.create(
+            user=request.user,
+            streamer=streamer,
+            amount=donation_data['amount'],
+            payment_id=payment_id,
+            anonymous=donation_data['anonymous']
+        )
+        return render(request, 'payment_success.html', {
+            'donor_name': 'Anonymous' if donation.anonymous else donor_twitch,
+            'streamer_name': streamer.socialaccount_set.first().extra_data['display_name'],
+            'amount': donation.amount,
+            'net_to_streamer': donation.net_to_streamer
+        })
     return render(request, 'payment_error.html', {'error': payment.error})
 
 @login_required

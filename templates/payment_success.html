@@ -1,3 +1,13 @@
-<h1>Donation Successful!</h1>
-<p>You donated ${{ amount }}. Emote unlocks coming soon!</p>
-<a href="{% url 'dashboard' %}">Back to Dashboard</a>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Donation Successful</title>
+  </head>
+  <body>
+    <h1>Donation Successful!</h1>
+    <p>{{ donor_name }} donated ${{ amount }} to {{ streamer_name }}.</p>
+    <p>{{ streamer_name }} receives ${{ net_to_streamer }} after fees.</p>
+    <p>Emote unlocks coming soon!</p>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+  </body>
+</html>

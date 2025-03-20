@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 class Emote(models.Model):
     '''Model definition for Emote.'''
@@ -38,3 +38,24 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+class Donation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='donations_made')
+    streamer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='donations_received')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Donation before fees
+    emoterush_fee = models.DecimalField(max_digits=10, decimal_places=2)  # 10%
+    processing_fee = models.DecimalField(max_digits=10, decimal_places=2)  # PayPal 2.9% + $0.30
+    net_to_streamer = models.DecimalField(max_digits=10, decimal_places=2)  # 90% after fees
+    payment_id = models.CharField(max_length=255, unique=True)  # PayPal payment ID
+    anonymous = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Only on creation
+            self.emoterush_fee = self.amount * 0.10  # 10% to EmoteRush
+            self.processing_fee = (self.amount * 0.029) + 0.30  # PayPal fee
+            self.net_to_streamer = (self.amount - self.emoterush_fee) - self.processing_fee
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username} donated ${self.amount} to {self.streamer.username}"
