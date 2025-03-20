@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from .secrets import TWITCH_CLIENT_ID, TWITCH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_SECRET
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -115,10 +116,5 @@ CHANNEL_LAYERS = {
     },
 }
 
-TWITCH_CLIENT_ID = '2ds49h79js9mle96fuxs1edq2gmj4v'
-TWITCH_SECRET = 'qzizct89dkikahjrs9c99pev53946b'
-PAYPAL_CLIENT_ID = 'YOUR_PAYPAL_CLIENT_ID'
-PAYPAL_SECRET = 'YOUR_PAYPAL_SECRET'
-
-ACCOUNT_EMAIL_REQUIRED = False
+ACCOUNT_SIGNUP_FIELDS = ['username*', 'password1*', 'password2*']  # No email
 ACCOUNT_EMAIL_VERIFICATION = 'none'

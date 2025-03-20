@@ -4,8 +4,11 @@
     <title>EmoteRush Dashboard</title>
   </head>
   <body>
-    <h1>Welcome, {{ user.username }}!</h1>
+    <h1>Welcome, {{ twitch_username }}!</h1>
     <p>You are logged in with Twitch.</p>
-    <a href="/accounts/logout/">Logout</a>
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      <button type="submit">Logout</button>
+    </form>
   </body>
 </html>

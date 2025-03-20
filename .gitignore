@@ -1,0 +1,18 @@
+# Virtual environment
+venvEmoteRush/
+
+# Secrets
+emoterush/secrets.py
+
+# Database
+db.sqlite3
+
+# Media (for emotes later)
+media/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE files (optional, if using VSCode)
+.vscode/
