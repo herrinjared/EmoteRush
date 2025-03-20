@@ -2,17 +2,41 @@
 <html>
   <head>
     <title>EmoteRush Dashboard</title>
+    <style>
+      .emote-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .emote-card {
+        text-align: center;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .emote-card img {
+        max-width: 80px;
+        height: auto;
+      }
+    </style>
   </head>
   <body>
     <h1>Welcome, {{ twitch_username }}!</h1>
-    <p>You are logged in with Twitch.</p>
-    <p>Debug: {{ twitch_data }}</p>
-    <p>
-      Your Donation Page: <a href="{{ donation_url }}">{{ donation_url }}</a>
-    </p>
-    <form method="post" action="{% url 'account_logout' %}">
-      {% csrf_token %}
-      <button type="submit">Logout</button>
-    </form>
+    <p>Your donation link: <a href="{{ donation_url }}">{{ donation_url }}</a></p>
+    <h2>Your Emotes</h2>
+    {% if user_emotes %}
+    <div class="emote-grid">
+      {% for emote in user_emotes %}
+      <div class="emote-card">
+        <img src="{{ emote.emote_type.image.url }}" alt="{{ emote.emote_type.name }}" />
+        <p>{{ emote.emote_type.name }}</p>
+        <p>{{ emote.emote_type.rarity }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p>No emotes yet—donate to unlock some!</p>
+    {% endif %}
   </body>
 </html>
