@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
+    path('admin/', admin.site.urls),          # Admin interface
+    path('accounts/', include('allauth.urls')),  # Allauth handles Twitch login
+    path('', include('core.urls')),           # Routes to core app
 ]
