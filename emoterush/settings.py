@@ -1,9 +1,8 @@
 from pathlib import Path
-from .secrets import TWITCH_CLIENT_ID, TWITCH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_SECRET
+from .secrets import SECRET_KEY, TWITCH_CLIENT_ID, TWITCH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_SECRET
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-9unfocutgng%&luq+jwfbc@z3e6w_x5sx0yajpms0hz^epat%@'
 DEBUG = True
 ALLOWED_HOSTS = []
 
