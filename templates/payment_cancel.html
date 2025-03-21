@@ -1,3 +1,41 @@
-<h1>Donation Cancelled</h1>
-<p>You cancelled your donation.</p>
-<a href="{% url 'dashboard' %}">Back to Dashboard</a>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donation Cancelled - EmoteRush</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+      }
+      .card {
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .btn-back {
+        background-color: #6441a5; /* Twitch purple */
+        border-color: #6441a5;
+      }
+      .btn-back:hover {
+        background-color: #50338c;
+        border-color: #50338c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card p-4 text-center">
+        <h1 class="text-danger">Donation Cancelled</h1>
+        <p class="lead">You cancelled your donation.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-back btn-lg text-white">Back to Dashboard</a>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

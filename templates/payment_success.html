@@ -1,24 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Donation Successful</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donation Successful - EmoteRush</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+      }
+      .card {
+        border: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .btn-back {
+        background-color: #6441a5; /* Twitch purple */
+        border-color: #6441a5;
+      }
+      .btn-back:hover {
+        background-color: #50338c;
+        border-color: #50338c;
+      }
+      .emote-list {
+        list-style: none;
+        padding-left: 0;
+      }
+      .emote-list li {
+        padding: 5px 0;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .emote-list li img {
+        width: 32px;
+        height: 32px;
+        margin-right: 10px;
+      }
+      .emote-list li span {
+        font-weight: normal;
+        color: #6c757d;
+      }
+    </style>
   </head>
   <body>
-    <h1>Donation Successful!</h1>
-    <p>{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }}.</p>
-    <p>Total with fees: ${{ total_paid|floatformat:2 }}.</p>
-    <p>{{ streamer_name }} receives ${{ net_to_streamer|floatformat:2 }}.</p>
-    <p>EmoteRush receives ${{ emoterush_fee|floatformat:2 }}.</p>
-    {% if unlocked_emotes %}
-    <h2>You Unlocked Emotes!</h2>
-    <ul>
-      {% for emote in unlocked_emotes %}
-      <li>{{ emote.emote_type.name }} ({{ emote.emote_type.rarity }})</li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p>No emotes unlocked this time—try again!</p>
-    {% endif %}
-    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+    <div class="container">
+      <div class="card p-4">
+        <h1 class="text-success text-center">Donation Successful!</h1>
+        <p class="lead text-center">{{ donor_name }} donated ${{ amount|floatformat:2 }} to {{ streamer_name }}.</p>
+        <div class="text-center">
+          <p>Total with fees: <strong>${{ total_paid|floatformat:2 }}</strong></p>
+          <p>{{ streamer_name }} receives: <strong>${{ net_to_streamer|floatformat:2 }}</strong></p>
+          <p>EmoteRush receives: <strong>${{ emoterush_fee|floatformat:2 }}</strong></p>
+        </div>
+        {% if unlocked_emotes %}
+        <h2 class="text-center mt-4">You Unlocked Emotes!</h2>
+        <ul class="emote-list text-center">
+          {% for emote in unlocked_emotes %}
+          <li>
+            <img src="{{ emote.emote_type.image.url }}" alt="{{ emote.emote_type.name }}" />
+            {{ emote.emote_type.name }} <span>({{ emote.emote_type.rarity }})</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-muted">No emotes unlocked this time—try again!</p>
+        {% endif %}
+        <div class="text-center mt-4">
+          <a href="{% url 'dashboard' %}" class="btn btn-back btn-lg text-white">Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

@@ -32,34 +32,45 @@ def dashboard(request):
 
 @login_required(login_url='/accounts/login/')
 def donate(request, streamer_username):
-    streamer = User.objects.get(socialaccount__extra_data__login=streamer_username)
-    streamer_name = streamer.socialaccount_set.first().extra_data['display_name']
-    if request.method == 'POST':
-        amount = float(request.POST.get('amount', 0))
-        processing_fee = (amount * 0.029) + 0.30
-        total_charge = amount + processing_fee
-        payment = paypalrestsdk.Payment({
-            "intent": "sale",
-            "payer": {"payment_method": "paypal"},
-            "redirect_urls": {
-                "return_url": request.build_absolute_uri(reverse('payment_execute')),
-                "cancel_url": request.build_absolute_uri(reverse('payment_cancel'))
-            },
-            "transactions": [{
-                "amount": {"total": f"{total_charge:.2f}", "currency": "USD"},
-                "description": f"Donation to {streamer_name}"
-            }]
+    try:
+        streamer = User.objects.get(socialaccount__extra_data__login=streamer_username)
+        streamer_social = streamer.socialaccount_set.filter(provider='twitch').first()
+        streamer_data = streamer_social.extra_data
+        streamer_name = streamer_data['display_name']
+        streamer_profile_pic = streamer_data.get('profile_image_url', '')
+
+        if request.method == 'POST':
+            amount = float(request.POST.get('amount', 0))
+            processing_fee = (amount * 0.029) + 0.30
+            total_charge = amount + processing_fee
+            payment = paypalrestsdk.Payment({
+                "intent": "sale",
+                "payer": {"payment_method": "paypal"},
+                "redirect_urls": {
+                    "return_url": request.build_absolute_uri(reverse('payment_execute')),
+                    "cancel_url": request.build_absolute_uri(reverse('payment_cancel'))
+                },
+                "transactions": [{
+                    "amount": {"total": f"{total_charge:.2f}", "currency": "USD"},
+                    "description": f"Donation to {streamer_name}"
+                }]
+            })
+            if payment.create():
+                request.session['donation'] = {
+                    'streamer_id': streamer.id,
+                    'amount': amount,
+                    'processing_fee': processing_fee,
+                    'anonymous': request.POST.get('anonymous', 'off') == 'on'
+                }
+                return redirect(next((link.href for link in payment.links if link.rel == "approval_url"), None))
+            return render(request, 'payment_error.html', {'error': payment.error})
+
+        return render(request, 'donate.html', {
+            'streamer_name': streamer_name,
+            'streamer_profile_pic': streamer_profile_pic,
         })
-        if payment.create():
-            request.session['donation'] = {
-                'streamer_id': streamer.id,
-                'amount': amount,
-                'processing_fee': processing_fee,
-                'anonymous': request.POST.get('anonymous', 'off') == 'on'
-            }
-            return redirect(next((link.href for link in payment.links if link.rel == "approval_url"), None))
-        return render(request, 'payment_error.html', {'error': payment.error})
-    return render(request, 'donate.html', {'streamer_name': streamer_name})
+    except User.DoesNotExist:
+        return render(request, 'donate.html', {'streamer_name': streamer_username, 'error': 'Streamer not found.'})
 
 @login_required(login_url='/accounts/login/')
 def payment_execute(request):
