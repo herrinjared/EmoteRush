@@ -18,7 +18,7 @@ class EmoteType(models.Model):
     ])
     animated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    available_instances = models.PositiveIntegerField()  # Total available
+    available_instances = models.PositiveIntegerField()
 
     class Meta:
         verbose_name = 'Emote Type'
@@ -28,7 +28,7 @@ class EmoteType(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Set initial availability on creation
+        if not self.pk:
             rarity_limits = {
                 'common': 10000000, 'uncommon': 1000000, 'rare': 100000,
                 'epic': 10000, 'legendary': 1000, 'mythic': 100
@@ -39,7 +39,7 @@ class EmoteType(models.Model):
 class UserEmote(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='emotes')
     emote_type = models.ForeignKey(EmoteType, on_delete=models.CASCADE)
-    count = models.PositiveIntegerField(default=1)  # Number owned by user
+    count = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -69,35 +69,25 @@ class Donation(models.Model):
         super().save(*args, **kwargs)
 
     def roll_for_emotes(self):
-        chances = int(self.amount)
+        emote_count = int(self.amount)  # 1 emote per $1
         unlocked_emotes = []
-        rarities = [
-            ('common', 0.50), ('uncommon', 0.30), ('rare', 0.15),
-            ('epic', 0.04), ('legendary', 0.009), ('mythic', 0.001)
-        ]
-        for _ in range(chances):
-            if random.random() < 0.5:
-                rarity = random.choices(
-                    [r[0] for r in rarities],
-                    weights=[r[1] for r in rarities],
-                    k=1
-                )[0]
-                emote_type = EmoteType.objects.filter(
-                    rarity=rarity, available_instances__gt=0
-                ).order_by('?').first()
-                if emote_type:
-                    user_emote, created = UserEmote.objects.get_or_create(
-                        user=self.user,
-                        emote_type=emote_type,
-                        defaults={'count': 1}
-                    )
-                    if created:
-                        emote_type.available_instances -= 1
-                        emote_type.save()
-                    else:
-                        user_emote.count += 1
-                        user_emote.save()
-                    unlocked_emotes.append(user_emote)
+        for _ in range(emote_count):
+            emote_type = EmoteType.objects.filter(
+                available_instances__gt=0
+            ).order_by('?').first()
+            if emote_type:
+                user_emote, created = UserEmote.objects.get_or_create(
+                    user=self.user,
+                    emote_type=emote_type,
+                    defaults={'count': 1}
+                )
+                if created:
+                    emote_type.available_instances -= 1
+                    emote_type.save()
+                else:
+                    user_emote.count += 1
+                    user_emote.save()
+                unlocked_emotes.append(user_emote)
         return unlocked_emotes
 
     def __str__(self):
