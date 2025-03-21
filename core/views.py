@@ -5,7 +5,8 @@ from allauth.socialaccount.models import SocialAccount
 import paypalrestsdk
 from django.conf import settings
 from django.urls import reverse
-from .models import Donation, UserEmote  # Add UserEmote
+from .models import Donation, UserEmote
+from django.contrib.auth import logout
 
 paypalrestsdk.configure({
     "mode": "sandbox",
@@ -13,21 +14,23 @@ paypalrestsdk.configure({
     "client_secret": settings.PAYPAL_SECRET
 })
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def dashboard(request):
-    twitch_account = SocialAccount.objects.filter(user=request.user, provider='twitch').first()
+    # Get Twitch social account data
+    twitch_account = request.user.socialaccount_set.filter(provider='twitch').first()
     twitch_data = twitch_account.extra_data if twitch_account else {}
-    username = twitch_data.get('display_name', 'Guest')
-    donation_url = reverse('donate', args=[twitch_data.get('login', 'unknown')])
+    username = twitch_data.get('display_name', request.user.username)
+    donation_url = reverse('donate', args=[twitch_data.get('login', request.user.username)])
     user_emotes = UserEmote.objects.filter(user=request.user).select_related('emote_type')
     return render(request, 'dashboard.html', {
         'twitch_username': username,
-        'twitch_data': twitch_data,
+        'twitch_email': twitch_data.get('email', 'N/A'),
+        'twitch_id': twitch_data.get('id', 'N/A'),
         'donation_url': request.build_absolute_uri(donation_url),
         'user_emotes': user_emotes
     })
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def donate(request, streamer_username):
     streamer = User.objects.get(socialaccount__extra_data__login=streamer_username)
     streamer_name = streamer.socialaccount_set.first().extra_data['display_name']
@@ -58,7 +61,7 @@ def donate(request, streamer_username):
         return render(request, 'payment_error.html', {'error': payment.error})
     return render(request, 'donate.html', {'streamer_name': streamer_name})
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def payment_execute(request):
     payment_id = request.GET.get('paymentId')
     payer_id = request.GET.get('PayerID')
@@ -87,6 +90,15 @@ def payment_execute(request):
         })
     return render(request, 'payment_error.html', {'error': payment.error})
 
-@login_required
+@login_required(login_url='/accounts/login/')
 def payment_cancel(request):
     return render(request, 'payment_cancel.html')
+
+def custom_logout(request):
+    if request.method == 'POST':
+        # Only remove Twitch social account data, not full session
+        if request.user.is_authenticated and request.user.socialaccount_set.exists():
+            SocialAccount.objects.filter(user=request.user, provider='twitch').delete()
+            logout(request)  # Full logout for now; refine later if needed
+        return redirect('home')
+    return render(request, 'account/logout.html', {'request': request})

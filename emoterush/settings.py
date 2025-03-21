@@ -14,12 +14,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core',
+    'django.contrib.sites',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.twitch',
     'channels',
+    'core',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -92,6 +94,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 SITE_ID = 1
+LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -104,7 +107,12 @@ CHANNEL_LAYERS = {
     },
 }
 
-ACCOUNT_EMAIL_REQUIRED = False
+SESSION_COOKIE_AGE = 1209600
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+ACCOUNT_SIGNUP_FIELDS = []  # Added to disable local signup fields
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_ONLY = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_ADAPTER = 'core.adapters.CustomSocialAccountAdapter'
