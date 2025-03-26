@@ -1,27 +1,12 @@
 # Python/Django
-# Virtual environment
 venvER/
-
-# Secrets
-emoterush/secrets.py
-
-# Database
+backend/emoterush/secrets.py
 *.sqlite3
-
-# Media (for emotes later)
-media/
-
-# Static files (if served from a CDN in production)
-static/
-
-# Python cache
+backend/media/
+backend/static/
 __pycache__/
 *.py[cod]
-
-# Logs
 *.log
-
-# IDE files (optional, if using VSCode or others)
 .vscode/
 *.sublime-*
 .idea/
@@ -46,16 +31,10 @@ frontend/next-env.d.ts
 .DS_Store
 *.pem
 *.swp
-
-# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# Environment files (opt-in for committing if needed)
 .env*
 !.env.example
-
-# Vercel
 .vercel
