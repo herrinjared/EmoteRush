@@ -1,0 +1,61 @@
+# Python/Django
+# Virtual environment
+venvER/
+
+# Secrets
+emoterush/secrets.py
+
+# Database
+*.sqlite3
+
+# Media (for emotes later)
+media/
+
+# Static files (if served from a CDN in production)
+static/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+
+# IDE files (optional, if using VSCode or others)
+.vscode/
+*.sublime-*
+.idea/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
+frontend/build
+frontend/coverage
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Misc
+.DS_Store
+*.pem
+*.swp
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (opt-in for committing if needed)
+.env*
+!.env.example
+
+# Vercel
+.vercel
