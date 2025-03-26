@@ -34,14 +34,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.twitch',
 
-    'users'
+    'users',
     'emotes',
     'payments',
     'market',
     'alerts',
     'api',
     'core',
-    'extentions',
+    'extensions',
     'analytics',
 ]
 
