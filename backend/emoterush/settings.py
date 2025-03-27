@@ -1,15 +1,12 @@
 from pathlib import Path
-from .secrets import *
+from .secrets import SECRET_KEY, TWITCH_CLIENT_ID, TWITCH_SECRET
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -26,9 +23,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     'channels',
     'drf_yasg',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -43,6 +43,14 @@ INSTALLED_APPS = [
     'core',
     'extensions',
     'analytics',
+]
+
+AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = [
+    'users.auth_backend.CustomAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +137,22 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    'twitch': {
+        'APP': {
+            'client_id': TWITCH_CLIENT_ID,
+            'secret': TWITCH_SECRET,
+            'key': '',
+        },
+        'SCOPE': ['user:read:email'],
+    }
+}
