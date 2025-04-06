@@ -11,8 +11,10 @@ venv*/
 
 # Django
 *.log
-db.sqlite3
+db.sqlite3  # Keep this for legacy or testing
 media/
+migrations/  # Optional: exclude migrations during dev (see note)
+*.sql        # Exclude PostgreSQL dumps
 
 # Secrets
 emoterush/secrets.py
@@ -20,3 +22,7 @@ emoterush/secrets.py
 # IDEs
 .vscode/
 .idea/
+
+# Misc
+*.bak        # Backup files (e.g., db.sqlite3.bak)
+*.swp        # Vim swap files

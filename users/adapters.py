@@ -1,7 +1,7 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from .models import User
 from django.db import IntegrityError
-from emotes.models import Emote, UserEmote
+from emotes.models import Emote
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):

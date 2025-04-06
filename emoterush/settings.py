@@ -1,5 +1,5 @@
 from pathlib import Path
-from .secrets import SECRET_KEY, TWITCH_CLIENT_ID, TWITCH_SECRET, PAYPAL_CLIENT_ID, PAYPAL_SECRET
+from .secrets import *
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -71,8 +71,12 @@ ASGI_APPLICATION = 'emoterush.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'emoterush',
+        'USER': 'postgres',
+        'PASSWORD': POSTGRES_PASSWORD,
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

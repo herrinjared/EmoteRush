@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
 import json
+from django.db.utils import OperationalError
 from emotes.models import Emote
 
 class User(AbstractUser):
@@ -34,27 +35,35 @@ class User(AbstractUser):
     
     def set_emotes(self, emotes_dict):
         self.emotes = json.dumps(emotes_dict)
+        self.save()
 
     def add_emote(self, emote_name, count=1, force_special=False):
         """ Add an emote instance, respecting special emote limits unless forced. """
         emotes_dict = self.get_emotes()
         emote = Emote.objects.get(name=emote_name)
-
-        current_count = emotes_dict.get(emote_name, 0)
-        if emote.is_special() and current_count >=1 and not force_special:
-            return # Not duplicates for special emotes unless forced
-        emotes_dict[emote_name] = current_count + count
-        self.set_emotes(emotes_dict)
+        try:
+            current_count = emotes_dict.get(emote_name, 0)
+            if emote.is_special() and current_count >=1 and not force_special:
+                return # Not duplicates for special emotes unless forced
+            emotes_dict[emote_name] = current_count + count
+            self.set_emotes(emotes_dict)
+        except (Emote.DoesNotExist, OperationalError):
+            pass # Skip if emote or table doesn't exist
 
     def assign_role_emotes(self, role_field, rarity):
         """ Assign all emotes of a given rarity if the role is enabled. """
         if getattr(self, role_field):
             emotes_dict = self.get_emotes()
-            role_emotes = Emote.objects.filter(rarity=rarity)
-            for emote in role_emotes:
-                if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
-                    emotes_dict[emote.name] = 1
-            self.set_emotes(emotes_dict)
+            try:
+                role_emotes = Emote.objects.filter(rarity=rarity)
+                for emote in role_emotes:
+                    if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
+                        emotes_dict[emote.name] = 1
+                self.set_emotes(emotes_dict)
+            except OperationalError:
+                pass # Table doesn't exist yet, skip silently
+            except Emote.DoesNotExist:
+                pass # No emotes of this rarity, skip
 
     def update_from_twitch(self, twitch_data):
         """

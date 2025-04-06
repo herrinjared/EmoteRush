@@ -23,7 +23,7 @@ class UserEmoteForm(forms.ModelForm):
             emotes_dict = json.loads(emotes_str)
             for emote_name, count in emotes_dict.items():
                 emote = Emote.objects.get(name=emote_name)
-                if emote.is_special() and count > 1 and not self.user.is_superuser:
+                if emote.is_special() and count > 1:
                     raise forms.ValidationError(f"Special emote '{emote_name}' cannot exceed 1 instance unless set by superuser.")
             return emotes_str
         except json.JSONDecodeError:
