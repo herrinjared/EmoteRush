@@ -1,5 +1,4 @@
-(function ($) {
-  // Wait for django.jQuery to be available
+(function () {
   function initScript() {
     if (typeof django.jQuery === "undefined") {
       setTimeout(initScript, 100);
@@ -9,7 +8,6 @@
     var $ = django.jQuery;
 
     $(document).ready(function () {
-      // Rarity mapping from model
       const rarityChances = {
         pity: 0.0,
         earlydays: 0.0,
@@ -42,28 +40,38 @@
         novelty: 1,
       };
 
-      // Function to format numbers with commas
       function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       }
 
-      // Update display function
+      function getLikelihoodText(chance) {
+        if (chance === 0) return "0% (Not rollable)";
+        const fraction = chance / 100;
+        const likelihood = 1 / fraction;
+        let likelihoodText;
+        if (Number.isInteger(likelihood)) {
+          likelihoodText = `1 in ${formatNumber(Math.round(likelihood))}`;
+        } else if (likelihood < 100) {
+          likelihoodText = `1 in ${likelihood.toFixed(1)}`;
+        } else {
+          likelihoodText = `1 in ${formatNumber(Math.round(likelihood))}`;
+        }
+        return Number.isInteger(chance) ? `${chance}%` : `${chance}% (about ${likelihoodText})`;
+      }
+
       function updateFields() {
         const rarity = $("#id_rarity").val();
         const rollChance = rarityChances[rarity] || 0.0;
         const maxInstances = rarityMaxInstances[rarity] || 0;
 
-        const rollChanceText = Number.isInteger(rollChance) ? `${rollChance}%` : `${rollChance}%`;
+        const rollChanceText = getLikelihoodText(rollChance);
         const maxInstancesText = maxInstances > 0 ? formatNumber(maxInstances) : "Unlimited";
 
         $(".field-formatted_roll_chance .readonly").text(rollChanceText);
         $(".field-formatted_max_instances .readonly").text(maxInstancesText);
       }
 
-      // Initial update
       updateFields();
-
-      // Update on rarity change
       $("#id_rarity").change(updateFields);
     });
   }

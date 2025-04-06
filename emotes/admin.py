@@ -9,15 +9,31 @@ class EmoteAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {'fields': ('name', 'image')}),
         ('Properties', {'fields': ('rarity',)}),
-        ('Read-Only', {'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances')}),
+        ('Read-Only', {
+            'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances'),
+            'description': "These values update based on the selected rarity."
+        }),
     )
-
     readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'created_at', 'updated_at')
 
     def formatted_roll_chance(self, obj):
-        """ Display roll_chance as a percentage without decimals. """
-        return f"{int(obj.roll_chance)}%" if obj.roll_chance.is_integer() else f"{obj.roll_chance}%"
+        """ Display roll_chance as a percentage without decimals but with likelihood help text. """
+        chance = obj.roll_chance
+        if chance == 0:
+            return "0% (Not rollable)"
+        # Convert percentage to fraction (e.g., 70% = 0.7, 0.01% = 0.0001)
+        fraction = chance / 100
+        likelihood = 1 / fraction if fraction > 0 else float('inf')
+        # Format likelihood
+        if likelihood.is_integer():
+            likelihood_text = f"1 in {int(likelihood):,}"
+        elif likelihood < 100:
+            likelihood_text = f"1 in {likelihood:.1f}"
+        else:
+            likelihood_text = f"1 in {int(likelihood):,}"
+        return f"{int(chance)}%" if chance.is_integer() else f"{chance}% (about {likelihood_text})"
     formatted_roll_chance.short_description = 'Roll Chance'
+    formatted_roll_chance.help_text = "Percentage chance of rolling this rarity, with approximate likelihood."
 
     def formatted_max_instances(self, obj):
         """ Display max_instances with commas for readability. """
