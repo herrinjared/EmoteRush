@@ -27,14 +27,15 @@ class Emote(models.Model):
         ('novelty', 'Novelty'),
     )
 
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=47, help_text="User-friendly name without 'ER:' prefix (e.g., pity1)")
+    chat_display_name = models.CharField(max_length=50, unique=True, help_text="Unique emote name with 'ER:' (e.g., ER:emote)", editable=False)
+    rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
     image = models.ImageField(
         upload_to='emotes/',
         blank=True, null=True,
         validators=[validate_square_image],
         help_text="Upload a square PNG or GIF (supports transparency and animation)."
     )
-    rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
     roll_chance = models.FloatField(
         default=0.0,
         validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
@@ -46,6 +47,18 @@ class Emote(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        # Auto-prefix chat_display_name
+        proposed_chat_name = f"ER:{self.name}"
+        if len(proposed_chat_name) > 50:
+            raise ValidationError("Chat display name exceeds 50 characters with 'ER:' prefix.")
+        self.chat_display_name = proposed_chat_name
+
+    def save(self, *args, **kwargs):
+        # Ensure chat_display_name is set before saving
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.rarity})"
