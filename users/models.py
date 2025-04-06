@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
 import json
+from emotes.models import Emote
 
 class User(AbstractUser):
     # Core fields from Twitch
@@ -14,6 +15,11 @@ class User(AbstractUser):
     # EmoteRush-specific fields
     emotes = models.TextField(default='{}', help_text="JSON of emote counts, e.g., {'pity1': 1, 'common1': 3}")     # JSON: {"ER:pity1": 1}
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)    # For payouts
+
+    # Roll designations
+    is_artist = models.BooleanField(default=False, help_text="User is an Artist, gets all artist emotes")
+    is_developer = models.BooleanField(default=False, help_text="User is a Developer, gets all developer emotes")
+    is_founder = models.BooleanField(default=False, help_text="User is a Founder, gets all founder emotes")
 
     # Timestamps and change log
     date_created = models.DateTimeField(default=timezone.now, help_text="When the user was created")
@@ -31,7 +37,6 @@ class User(AbstractUser):
 
     def add_emote(self, emote_name, count=1, force_special=False):
         """ Add an emote instance, respecting special emote limits unless forced. """
-        from emotes.models import Emote
         emotes_dict = self.get_emotes()
         emote = Emote.objects.get(name=emote_name)
 
@@ -40,6 +45,16 @@ class User(AbstractUser):
             return # Not duplicates for special emotes unless forced
         emotes_dict[emote_name] = current_count + count
         self.set_emotes(emotes_dict)
+
+    def assign_role_emotes(self, role_field, rarity):
+        """ Assign all emotes of a given rarity if the role is enabled. """
+        if getattr(self, role_field):
+            emotes_dict = self.get_emotes()
+            role_emotes = Emote.objects.filter(rarity=rarity)
+            for emote in role_emotes:
+                if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
+                    emotes_dict[emote.name] = 1
+            self.set_emotes(emotes_dict)
 
     def update_from_twitch(self, twitch_data):
         """
