@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Emote
 
 class EmoteAdmin(admin.ModelAdmin):
@@ -12,6 +13,16 @@ class EmoteAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = ('chat_display_name', 'roll_chance', 'max_instances', 'created_at', 'updated_at')
+
+    def formatted_roll_chance(self, obj):
+        """ Display roll_chance as a percentage without decimals. """
+        return f"{int(obj.roll_chance)}%" if obj.roll_chance.is_integer() else f"{obj.roll_chance}"
+    formatted_roll_chance.short_description = 'Roll Chance'
+
+    def formatted_max_instances(self, obj):
+        """ Display max_instances with commas for readability. """
+        return f"{obj.max_instances:,}" if obj.max_instances > 0 else "Unlimited"
+    formatted_max_instances.short_description = "Max Instances"
 
     def has_add_permission(self, request):
         return request.user.is_superuser
