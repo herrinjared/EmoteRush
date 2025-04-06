@@ -11,7 +11,9 @@ class EmoteAdmin(admin.ModelAdmin):
         ('Properties', {'fields': ('rarity',)}),
         ('Read-Only', {
             'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances'),
-            'description': "The Roll Chance and Max Instances values are set automatically based on the selected rarity. Remainging emotes decrease as emotes are allocated."
+            'description': "The Chat Display Name is set automatically based on the name you input above. \n"
+            "The Roll Chance and Max Instances values are set automatically based on the selected rarity. \n"
+            "Remainging emotes decrease as emotes are allocated."
         }),
     )
     readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at', 'updated_at')
