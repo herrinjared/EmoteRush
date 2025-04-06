@@ -1,14 +1,20 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.shortcuts import redirect
-from .models import User
+from django.urls import reverse
 from django.db import IntegrityError
-from emotes.models import Emote
+from allauth.exceptions import ImmediateHttpResponse
+from .models import User, AdminUser
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):
         user = sociallogin.user
         twitch_data = sociallogin.account.extra_data
         twitch_id = twitch_data.get('id')
+
+        # If logged in as AdminUser, prompt to sign out
+        if request.user.is_authenticated and isinstance(request.user, AdminUser):
+            response = redirect(reverse('users:admin_twitch_prompt'))
+            raise ImmediateHttpResponse(response)
 
         if request.user.is_authenticated:
             sociallogin.connect(request, request.user)

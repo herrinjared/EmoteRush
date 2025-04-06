@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Login Conflict</title>
+  </head>
+  <body>
+    <h1>Admin Account Detected</h1>
+    <p>You’re logged in as an admin. To sign in with Twitch, you need to sign out first.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" name="choice" value="signout">Sign Out and Use Twitch</button>
+      <button type="submit" name="choice" value="stay">Stay Logged In</button>
+    </form>
+  </body>
+</html>
