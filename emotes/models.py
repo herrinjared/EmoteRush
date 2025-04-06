@@ -27,6 +27,38 @@ class Emote(models.Model):
         ('novelty', 'Novelty'),
     )
 
+    RARITY_CHANCES = {
+        'pity': 0.0,
+        'earlydays': 0.0,
+        'developer': 0.0,
+        'artist': 0.0,
+        'founder': 0.0,
+        'common': 70.0,
+        'uncommon': 25.0,
+        'rare': 5.0,
+        'epic': 1.0,
+        'legendary': 0.01,
+        'exotic': 0.001,
+        'mythic': 0.0001,
+        'novelty': 0.00001,
+    }
+
+    RARITY_MAX_INSTANCES = {
+        'pity': 0,  # Unlimited for special
+        'earlydays': 0,
+        'developer': 0,
+        'artist': 0,
+        'founder': 0,
+        'common': 1000000000,
+        'uncommon': 500000000,
+        'rare': 100000000,
+        'epic': 10000000,
+        'legendary': 1000000,
+        'exotic': 100000,
+        'mythic': 10000,
+        'novelty': 1,
+    }
+
     name = models.CharField(max_length=47, help_text="User-friendly name without 'ER:' prefix (e.g., pity1)")
     chat_display_name = models.CharField(max_length=50, unique=True, help_text="Unique emote name with 'ER:' (e.g., ER:emote)", editable=False)
     rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
@@ -35,15 +67,6 @@ class Emote(models.Model):
         blank=True, null=True,
         validators=[validate_square_image],
         help_text="Upload a square PNG or GIF (supports transparency and animation)."
-    )
-    roll_chance = models.FloatField(
-        default=0.0,
-        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
-        help_text="Chance of rolling this emote (0-100%), 0 for special emotes"
-    )
-    max_instances = models.BigIntegerField(
-        default=0,
-        help_text="Max instances allowed (0 for unlimited/special)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -65,3 +88,11 @@ class Emote(models.Model):
     
     def is_special(self):
         return self.rarity in ('pity', 'earlydays', 'developer', 'artist', 'founder')
+    
+    @property
+    def roll_chance(self):
+        return self.RARITY_CHANCES.get(self.rarity, 0.0)
+    
+    @property
+    def max_instances(self):
+        return self.RARITY_MAX_INSTANCES.get(self.rarity, 0)
