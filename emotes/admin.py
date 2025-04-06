@@ -3,20 +3,20 @@ from django.utils.html import format_html
 from .models import Emote
 
 class EmoteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'chat_display_name', 'rarity', 'roll_chance', 'max_instances', 'created_at')
+    list_display = ('name', 'chat_display_name', 'rarity', 'formatted_roll_chance', 'formatted_max_instances', 'created_at')
     list_filter = ('rarity',)
     search_fields = ('name', 'chat_display_name')
     fieldsets = (
         (None, {'fields': ('name', 'image')}),
         ('Properties', {'fields': ('rarity',)}),
-        ('Read-Only', {'fields': ('chat_display_name', 'roll_chance', 'max_instances')}),
+        ('Read-Only', {'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances')}),
     )
 
-    readonly_fields = ('chat_display_name', 'roll_chance', 'max_instances', 'created_at', 'updated_at')
+    readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'created_at', 'updated_at')
 
     def formatted_roll_chance(self, obj):
         """ Display roll_chance as a percentage without decimals. """
-        return f"{int(obj.roll_chance)}%" if obj.roll_chance.is_integer() else f"{obj.roll_chance}"
+        return f"{int(obj.roll_chance)}%" if obj.roll_chance.is_integer() else f"{obj.roll_chance}%"
     formatted_roll_chance.short_description = 'Roll Chance'
 
     def formatted_max_instances(self, obj):
@@ -37,5 +37,8 @@ class EmoteAdmin(admin.ModelAdmin):
         # Ensure chat_display_name is set before saving
         obj.clean()
         super().save_model(request, obj, form, change)
+
+    class Media:
+        js = ('admin/js/emote_rarity_update.js',)
 
 admin.site.register(Emote, EmoteAdmin)
