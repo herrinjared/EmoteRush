@@ -1,28 +1,33 @@
 # Python
-__pycache__/
-*.py[cod]
 *.pyc
+__pycache__/
 *.pyo
 *.pyd
-
-# Virtual environment
-venvER/
+.Python
+env/
 venv*/
+*.egg-info/
+dist/
+build/
 
 # Django
 *.log
-db.sqlite3  # Keep this for legacy or testing
+*.pot
+*.sqlite3
+db.sqlite3
 media/
-migrations/  # Optional: exclude migrations during dev (see note)
-*.sql        # Exclude PostgreSQL dumps
 
-# Secrets
-emoterush/secrets.py
+# Static files
+staticfiles/
+
+# Virtual environment (specific to your setup)
+venvER/
 
 # IDEs
-.vscode/
 .idea/
+.vscode/
+*.swp
 
-# Misc
-*.bak        # Backup files (e.g., db.sqlite3.bak)
-*.swp        # Vim swap files
+# OS files
+.DS_Store
+Thumbs.db
