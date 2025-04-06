@@ -22,6 +22,11 @@ emoterush/secrets.py
 
 # Static files
 staticfiles/
+media/
+
+# Migrations
+*/migrations/*
+!*/migrations/__init__.py
 
 # Virtual environment (specific to your setup)
 venvER/
