@@ -3,18 +3,18 @@ from django.utils.html import format_html
 from .models import Emote
 
 class EmoteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'chat_display_name', 'rarity', 'formatted_roll_chance', 'formatted_max_instances', 'created_at')
+    list_display = ('name', 'chat_display_name', 'rarity', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at')
     list_filter = ('rarity',)
     search_fields = ('name', 'chat_display_name')
     fieldsets = (
         (None, {'fields': ('name', 'image')}),
         ('Properties', {'fields': ('rarity',)}),
         ('Read-Only', {
-            'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances'),
-            'description': "These values update based on the selected rarity."
+            'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances'),
+            'description': "The Roll Chance and Max Instances values are set automatically based on the selected rarity. Remainging emotes decrease as emotes are allocated."
         }),
     )
-    readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'created_at', 'updated_at')
+    readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at', 'updated_at')
 
     def formatted_roll_chance(self, obj):
         """ Display roll_chance as a percentage without decimals but with likelihood help text. """

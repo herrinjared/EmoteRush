@@ -45,13 +45,14 @@ class User(AbstractUser):
     def add_emote(self, emote_name, count=1, force_special=False):
         """ Add an emote instance, respecting special emote limits unless forced. """
         emotes_dict = self.get_emotes()
-        emote = Emote.objects.get(name=emote_name)
         try:
+            emote = Emote.objects.get(name=emote_name)
             current_count = emotes_dict.get(emote_name, 0)
             if emote.is_special() and current_count >=1 and not force_special:
                 return # Not duplicates for special emotes unless forced
-            emotes_dict[emote_name] = current_count + count
-            self.set_emotes(emotes_dict)
+            if emote.allocate_instance(count):
+                emotes_dict[emote_name] = current_count + count
+                self.set_emotes(emotes_dict)
         except (Emote.DoesNotExist, OperationalError):
             pass # Skip if emote or table doesn't exist
 

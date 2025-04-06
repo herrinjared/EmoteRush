@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from PIL import Image
@@ -70,6 +70,10 @@ class Emote(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    remaining_instances = models.PositiveBigIntegerField(
+        default=0,
+        help_text="Number of instances still available. 0 means unlimited for special emotes."
+    )
 
     def clean(self):
         # Auto-prefix chat_display_name
@@ -80,6 +84,8 @@ class Emote(models.Model):
 
     def save(self, *args, **kwargs):
         # Ensure chat_display_name is set before saving
+        if self.pk is None:
+            self.remaining_instances = self.max_instances
         self.clean()
         super().save(*args, **kwargs)
 
@@ -96,3 +102,14 @@ class Emote(models.Model):
     @property
     def max_instances(self):
         return self.RARITY_MAX_INSTANCES.get(self.rarity, 0)
+    
+    @transaction.atomic
+    def allocate_instance(self, count=1):
+        """ Allocate instances and decrement remaining_instances. """
+        if self.is_special() and self.remaining_instances == 0:
+            return True
+        if self.remaining_instances < count:
+            return False
+        self.remaining_instances -= count
+        self.save(update_fields=['remaining_instances'])
+        return True

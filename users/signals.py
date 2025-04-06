@@ -15,7 +15,8 @@ def assign_existing_emotes(sender, instance, created, **kwargs):
     pity_emotes = Emote.objects.filter(rarity='pity')
     for emote in pity_emotes:
         if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
-            emotes_dict[emote.name] = 1
+            if instance.allocate_instance():
+                emotes_dict[emote.name] = 1
 
     # Assign earlydays emotes if user is in first 100
     early_users = User.objects.order_by('date_created')[:100]
@@ -24,7 +25,8 @@ def assign_existing_emotes(sender, instance, created, **kwargs):
         earlydays_emotes = Emote.objects.filter(rarity='earlydays')
         for emote in earlydays_emotes:
             if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
-                emotes_dict[emote.name] = 1
+                if instance.allocate_instance():
+                    emotes_dict[emote.name] = 1
 
     # Assign role-based emotes (artist, developer, founder)
     role_field_map = {
@@ -37,7 +39,8 @@ def assign_existing_emotes(sender, instance, created, **kwargs):
             role_emotes = Emote.objects.filter(rarity=rarity)
             for emote in role_emotes:
                 if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
-                    emotes_dict[emote.name] = 1
+                    if instance.allocate_instance():
+                        emotes_dict[emote.name] = 1
 
     # Save updated emotes
     if emotes_dict != instance.get_emotes(): # Only save if changed

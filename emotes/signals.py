@@ -19,8 +19,9 @@ def assign_new_emote(sender, instance, created, **kwargs):
         for user in users:
             emotes_dict = user.get_emotes()
             if instance.name not in emotes_dict or emotes_dict[instance.name] < 1:
-                emotes_dict[instance.name] = 1
-                user.set_emotes(emotes_dict)
+                if instance.allocate_instance():
+                    emotes_dict[instance.name] = 1
+                    user.set_emotes(emotes_dict)
     
     # Assign earlydays emotes to first 100 users
     if instance.rarity == 'earlydays':
@@ -28,8 +29,9 @@ def assign_new_emote(sender, instance, created, **kwargs):
         for user in users:
             emotes_dict = user.get_emotes()
             if instance.name not in emotes_dict or emotes_dict[instance.name] < 1:
-                emotes_dict[instance.name] = 1
-                user.set_emotes(emotes_dict)
+                if instance.allocate_instance():
+                    emotes_dict[instance.name] = 1
+                    user.set_emotes(emotes_dict)
     
     # Assign role-based emotes (artist, developer, founder)
     role_field_map = {
@@ -43,5 +45,6 @@ def assign_new_emote(sender, instance, created, **kwargs):
         for user in users:
             emotes_dict = user.get_emotes()
             if instance.name not in emotes_dict or emotes_dict[instance.name] < 1:
-                emotes_dict[instance.name] = 1
-                user.set_emotes(emotes_dict)
+                if instance.allocate_instance():
+                    emotes_dict[instance.name] = 1
+                    user.set_emotes(emotes_dict)
