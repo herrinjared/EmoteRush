@@ -1,4 +1,5 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.shortcuts import redirect
 from .models import User
 from django.db import IntegrityError
 from emotes.models import Emote
@@ -31,3 +32,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                     sociallogin.save(request)
 
         user.update_from_twitch(twitch_data)
+
+    def authentication_error(self, request, provider_id, error, exception, extra_context):
+        return redirect('/accounts/twitch/login/')
