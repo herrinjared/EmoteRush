@@ -18,9 +18,10 @@ def assign_existing_emotes(sender, instance, created, **kwargs):
             emotes_dict[emote.name] = 1
 
     # Assign earlydays emotes if user is in first 100
-    user_count = User.objects.count()
-    if user_count <= 100:
-        earlydays_emotes = Emote.objects.fister(rarity='earlydays')
+    early_users = User.objects.order_by('date_created')[:100]
+    early_user_id = {user.id for user in early_users}
+    if instance.id in early_user_id:
+        earlydays_emotes = Emote.objects.filter(rarity='earlydays')
         for emote in earlydays_emotes:
             if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:
                 emotes_dict[emote.name] = 1
