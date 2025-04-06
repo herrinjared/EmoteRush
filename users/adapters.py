@@ -31,9 +31,3 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                     sociallogin.save(request)
 
         user.update_from_twitch(twitch_data)
-
-        emotes_dict = user.get_emotes()
-        if not emotes_dict:
-            pity_emotes = Emote.objects.filter(rarity='pity')
-            for emote in pity_emotes:
-                user.add_emote(emote.name)
