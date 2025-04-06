@@ -11,7 +11,7 @@ class EmoteAdmin(admin.ModelAdmin):
     )
 
     def has_add_permission(self, request):
-        if not request.user.is_superuser and self.rarity in ('pity', 'earlydays', 'devgod', 'artist', 'founder'):
+        if not request.user.is_superuser and self.rarity in ('pity', 'earlydays', 'developer', 'artist', 'founder'):
             return False
         return True
     

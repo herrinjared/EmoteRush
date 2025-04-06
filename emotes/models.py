@@ -14,7 +14,7 @@ class Emote(models.Model):
     RARITY_CHOICES = (
         ('pity', 'Pity'),
         ('earlydays', 'EarlyDays'),
-        ('devgod', 'DevGod'),
+        ('developer', 'Developer'),
         ('artist', 'Artist'),
         ('founder', 'Founder'),
         ('common', 'Common'),
@@ -51,4 +51,4 @@ class Emote(models.Model):
         return f"{self.name} ({self.rarity})"
     
     def is_special(self):
-        return self.rarity in ('pity', 'earlydays', 'devgod', 'artist', 'founder')
+        return self.rarity in ('pity', 'earlydays', 'developer', 'artist', 'founder')
