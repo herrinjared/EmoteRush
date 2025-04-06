@@ -30,6 +30,11 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['twitch_id']
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['date_created'], name='idx_date_created'),
+        ]
+
     def get_emotes(self):
         return json.loads(self.emotes)
     

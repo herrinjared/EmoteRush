@@ -8,6 +8,10 @@ def assign_new_emote(sender, instance, created, **kwargs):
     """ Assign new emote to eligible users based on its rarity. """
     if not created:
         return # Only trigger on creation, not updates
+    
+    # Pre-fetch first 100 users for earlydays (shared across logic if needed)
+    early_users = User.objects.order_by('date_created')[:100]
+    early_user_ids = {user.id for user in early_users}
 
     # Assign pity emotes to all users
     if instance.rarity == 'pity':
@@ -20,7 +24,7 @@ def assign_new_emote(sender, instance, created, **kwargs):
     
     # Assign earlydays emotes to first 100 users
     if instance.rarity == 'earlydays':
-        users = User.objects.order_by('date_created')[:100]
+        users = User.objects.filter(id__in=early_user_ids)  # Use pre-fetched IDs
         for user in users:
             emotes_dict = user.get_emotes()
             if instance.name not in emotes_dict or emotes_dict[instance.name] < 1:
