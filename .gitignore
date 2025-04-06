@@ -17,6 +17,9 @@ build/
 db.sqlite3
 media/
 
+# Secrets
+emoterush/secrets.py
+
 # Static files
 staticfiles/
 
@@ -31,3 +34,7 @@ venvER/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Misc
+*.bak        # Backup files (e.g., db.sqlite3.bak)
+*.swp        # Vim swap files
