@@ -92,6 +92,9 @@ class Emote(models.Model):
         'novelty': 1,
     }
 
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
     name = models.CharField(max_length=47, help_text="User-friendly name without 'ER:' prefix (e.g., pity1)")
     chat_display_name = models.CharField(max_length=50, unique=True, help_text="Unique emote name with 'ER:' (e.g., ER:emote)", editable=False)
     rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
@@ -105,6 +108,13 @@ class Emote(models.Model):
         blank=True, null=True,
         validators=[validate_square_image, validate_thumbnail],
         help_text="Optional PNG thumbnail for GIFs (112x112px to 4096x4096px, ≤ 1MB). Defaults to first GIF frame."
+    )
+    artist = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_emotes',
+        help_text="The user credited as the artist. Defaults to the creator unless set by an admin."
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -121,6 +131,9 @@ class Emote(models.Model):
         self.chat_display_name = proposed_chat_name
 
     def save(self, *args, **kwargs):
+        # Set artist to the current user if not specified (for regular users)
+        if not self.artist and hasattr(self, '_request_user') and not self._request_user.is_superuser:
+            self.artist = self._request_user
         # Ensure chat_display_name is set before saving
         if self.pk is None:
             self.remaining_instances = self.max_instances

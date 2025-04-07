@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser, AbstractBaseUser, Permissio
 from django.utils import timezone
 import json
 from django.db.utils import OperationalError
-from emotes.models import Emote
+from django.apps import apps
 
 class User(AbstractUser):
     # Core fields from Twitch
@@ -46,6 +46,7 @@ class User(AbstractUser):
         """ Add an emote instance, respecting special emote limits unless forced. """
         emotes_dict = self.get_emotes()
         try:
+            Emote = apps.get_model('emotes', 'Emote')
             emote = Emote.objects.get(name=emote_name)
             current_count = emotes_dict.get(emote_name, 0)
             if emote.is_special() and current_count >=1 and not force_special:
@@ -61,6 +62,7 @@ class User(AbstractUser):
         if getattr(self, role_field):
             emotes_dict = self.get_emotes()
             try:
+                Emote = apps.get_model('emotes', 'Emote')
                 role_emotes = Emote.objects.filter(rarity=rarity)
                 for emote in role_emotes:
                     if emote.name not in emotes_dict or emotes_dict[emote.name] < 1:

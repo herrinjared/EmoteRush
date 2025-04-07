@@ -2,9 +2,10 @@ from django.contrib import admin
 from .models import Emote
 
 class EmoteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'chat_display_name', 'rarity', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at')
+    list_display = ('name', 'chat_display_name', 'rarity', 'artist', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at')
     list_filter = ('rarity',)
     search_fields = ('name', 'chat_display_name')
+    autocomplete_fields = ['artist']
     fieldsets = (
         (None, {'fields': ('name',)}),
         ('Image Upload', {
@@ -15,7 +16,7 @@ class EmoteAdmin(admin.ModelAdmin):
                 "Optional PNG thumbnail for GIFs (same rules); otherwise GIF thumbnail defaults to first frame."
             ),
         }),
-        ('Properties', {'fields': ('rarity',)}),
+        ('Properties', {'fields': ('rarity', 'artist')}),
         ('Read-Only', {
             'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances'),
             'description': (
@@ -58,9 +59,14 @@ class EmoteAdmin(admin.ModelAdmin):
         fields = list(self.readonly_fields)
         if obj and obj.is_special() and not request.user.is_superuser:
             fields.extend(['rarity'])
+        # Make artist readonly for non-superusers if already set
+        if obj and not request.user.is_superuser:
+            fields.append('artist')
         return fields
     
     def save_model(self, request, obj, form, change):
+        # Pass the current user to the model for artist defaulting
+        obj._request_user = request.user
         # Ensure chat_display_name is set before saving
         obj.clean()
         super().save_model(request, obj, form, change)
