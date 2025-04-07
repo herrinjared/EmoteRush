@@ -1,12 +1,47 @@
 from django.db import models, transaction
-from PIL import Image
 from django.core.exceptions import ValidationError
+from PIL import Image
+import os
 
 def validate_square_image(image):
+    """ Ensure image is square. """
+    img = Image.open(image)
+    if img.size[0] != img.size[1]:
+        raise ValidationError("Emote image must square (width = height).")
+    
+def validate_emote_format_and_size(image, is_thumbnail=False):
+    """ Validate format, dimensions, file size, transparency, and frames. """
     img = Image.open(image)
     width, height = img.size
-    if width != height:
-        raise ValidationError("Emote image must have a 1:1 aspect ratio (width = height).")
+    file_size = image.size / 1024 # Size in KB
+    ext = os.path.splitext(image.name)[1].lower()
+
+    # Format check
+    if is_thumbnail:
+        if ext != '.png':
+            raise ValidationError("Thumbnail must be a PNG.")
+    else:
+        expected_ext = '.gif' if img.is_animated else '.png'
+        if ext != expected_ext:
+            raise ValidationError(f"Image must be {expected_ext[1:].upper()} (PNG for still, GIF for animated).")
+        
+    # Transparency for PNG
+    if ext == '.png' and img.mode not in ('RGBA', 'LA'):
+        raise ValidationError("PNG must have a transparent background (RGBA or LA mode).")
+    
+    # GIF from count
+    if ext== '.gif' and img.is_animated and img.n_frames > 60:
+        raise ValidationError("GIF cannot exceed 60 frames.")
+    
+    # Size and file limits
+    if not (112 <= width <= 4096 and 112 <= height <= 4096):
+        raise ValidationError("Image must be between 112x122px and 4096x4096px.")
+    if file_size > 1024: # 1MB
+        raise ValidationError("File size cannot exceed 1MB.")
+    
+def validate_thumbnail(image):
+    """ Wrapper for thumbnail validation. """
+    validate_emote_format_and_size(image, is_thumbnail=True)
 
 class Emote(models.Model):
     RARITY_CHOICES = (
@@ -62,9 +97,14 @@ class Emote(models.Model):
     rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default='common')
     image = models.ImageField(
         upload_to='emotes/',
+        validators=[validate_square_image, validate_emote_format_and_size],
+        help_text="PNG (still) or GIF (animated), 112x112px to 4096x4096px, ≤ 1MB. PNGs must be transparent, GIFs no more than 60 frames."
+    )
+    thumbnail = models.ImageField(
+        upload_to='emotes/thumbs/',
         blank=True, null=True,
-        validators=[validate_square_image],
-        help_text="Upload a square PNG or GIF (supports transparency and animation)."
+        validators=[validate_square_image, validate_thumbnail],
+        help_text="Optional PNG thumbnail for GIFs (112x112px to 4096x4096px, ≤ 1MB). Defaults to first GIF frame."
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

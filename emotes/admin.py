@@ -6,13 +6,23 @@ class EmoteAdmin(admin.ModelAdmin):
     list_filter = ('rarity',)
     search_fields = ('name', 'chat_display_name')
     fieldsets = (
-        (None, {'fields': ('name', 'image')}),
+        (None, {'fields': ('name',)}),
+        ('Image Upload', {
+            'fields': ('image', 'thumbnail'),
+            'description': (
+                "Upload a PNG (still) or GIF (animated), 112x112px to 4096x4096px, ≤ 1MB.<br>"
+                "PNGs must be transparent. GIFs must have no more than 60 frames.<br>"
+                "Optional PNG thumbnail for GIFs (same rules); otherwise GIF thumbnail defaults to first frame."
+            ),
+        }),
         ('Properties', {'fields': ('rarity',)}),
         ('Read-Only', {
             'fields': ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances'),
-            'description': "The Chat Display Name is set automatically based on the name you input above. \n"
-            "The Roll Chance and Max Instances values are set automatically based on the selected rarity. \n"
-            "Remainging emotes decrease as emotes are allocated."
+            'description': (
+                "The Chat Display Name is set automatically based on the name you input above.<br>"
+                "The Roll Chance and Max Instances values are set automatically based on the selected rarity.<br>"
+                "Remaining emotes decrease as emotes are allocated."
+            ),
         }),
     )
     readonly_fields = ('chat_display_name', 'formatted_roll_chance', 'formatted_max_instances', 'remaining_instances', 'created_at', 'updated_at')
