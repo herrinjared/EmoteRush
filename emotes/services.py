@@ -30,6 +30,10 @@ def roll_emote(user):
     emotes, remaining_counts = zip(*available_emotes[chosen_rarity])
     chosen_emote = random.choices(emotes, weights=remaining_counts, k=1)[0]
 
-    if user.add_emote(chosen_emote.name):
+    emotes_dict = user.get_emotes()
+    old_count = emotes_dict.get(chosen_emote.name, 0)
+    user.add_emote(chosen_emote.name)
+    new_emotes_dict = user.get_emotes()
+    if new_emotes_dict.get(chosen_emote.name, 0) > old_count:
         return chosen_emote.name
     return None
