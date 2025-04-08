@@ -18,6 +18,41 @@ paypalrestsdk.configure({
 })
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+class BalanceTransaction(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='balance_transactions',
+        help_text="User receiving or paying this amount (null for EmoteRush cut)."
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Amount (positive for credit, negative for debit)."
+    )
+    transaction_type = models.CharField(
+        max_length=20,
+        choices=(
+            ('donation_streamer', 'Donation (Streamer)'),
+            ('donation_artist', 'Donation (Artist)'),
+            ('sale_seller', 'Sale (Seller)'),
+            ('sale_artist', 'Sale (Artist)'),
+            ('emoterush_cut', 'EmoteRush Cut'),
+            ('payout', 'Payout'),
+            ('payout_fee', 'Payout Fee')
+        ),
+        help_text="Type of transaction."
+    )
+    source = models.CharField(
+        max_length=50,
+        help_text="Source of the transaction (e.g., 'Donation #1', 'Payout #5')."
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user or 'EmoteRush'}: {self.transaction_type} ${self.amount} ({self.source})"
+
 class Donation(models.Model):
     donor = models.ForeignKey(
         User,
@@ -130,7 +165,7 @@ class Donation(models.Model):
 
     @transaction.atomic
     def unlock_emotes(self):
-        """Unlock emotes based on donation amount (1 per $1)."""
+        """ Unlock emotes based on donation amount (1 per $1). """
         emote_count = int(self.amount)
         unlocked_emotes = []
         for _ in range(emote_count):
@@ -144,14 +179,21 @@ class Donation(models.Model):
 
     @transaction.atomic
     def distribute_funds(self):
-        """Distribute funds to streamer and artist."""
-        streamer_share, _, artist_share = self.calculate_split()
+        """ Distribute funds to streamer, artist, and EmoteRush. """
         if self.status == 'completed':
-            self.streamer.balance += streamer_share
-            self.streamer.save()
+            streamer_share, emoterush_share, artist_share = self.calculate_split()
+            source = f"Donation #{self.id}"
+            BalanceTransaction.objects.bulk_create([
+                BalanceTransaction(user=self.streamer, amount=streamer_share, transaction_type='donation_streamer', source=source),
+                BalanceTransaction(user=None, amount=emoterush_share, transaction_type='emoterush_cut', source=source),
+            ])
             if self.emote_unlocked and self.emote_unlocked.artist:
-                self.emote_unlocked.artist.balance += artist_share
-                self.emote_unlocked.artist.save()
+                BalanceTransaction.objects.create(
+                    user=self.emote_unlocked.artist,
+                    amount=artist_share,
+                    transaction_type='donation_artist',
+                    source=source
+                )
 
     def save(self, *args, **kwargs):
         if self.pk is None:  # On creation
@@ -194,25 +236,60 @@ class Payout(models.Model):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    def calculate_payout_fee(self):
+        """ Estimate payout fee (simplified; adjust per processor rates). """
+        fee_rate = Decimal('0.029') # 2.9%
+        fixed_fee = Decimal('0.30') # $0.30
+        return (self.amount * fee_rate) + fixed_fee
+    
+    def net_amount(self):
+        """ Calculate amount user receives after fees. """
+        return self.amount - self.calculate_payout_fee()
+
     @transaction.atomic
     def process_payout(self):
-        """Process the payout and deduct from user balance."""
+        """ Process the payout, deduct from balance, and charge fees to recipient. """
         if self.amount > self.user.balance:
             raise ValueError("Insufficient balance")
         if self.amount < Decimal('1.00'):
             raise ValueError("Minimum payout is $1.00")
+        if not self.user.paypal_email and self.method == 'paypal':
+            raise ValueError("PayPal email required for payout")
+        
+        source = f"Payout #{self.id}"
+        payout_fee = self.calculate_payout_fee()
+        net_amount = self.net_amount()
 
         if self.method == 'paypal':
-            # Placeholder for PayPal payout
-            self.payment_id = f"paypal_{self.id}"
-            self.status = 'completed'
+            payout = paypalrestsdk.Payout({
+                "sender_batch_header": {
+                    "email_subject": "EmoteRush Payout",
+                    "email_message": f"You're receiving ${net_amount:.2f} after a ${payout_fee:.2f} fee."
+                },
+                "items": [{
+                    "recipient_type": "EMAIL",
+                    "amount": {"value": f"{self.amount:.2f}", "currency": "USD"},
+                    "receiver": self.user.paypal_email,
+                    "note": f"Payout of ${net_amount:.2f} after ${payout_fee:.2f} fee."
+                }]
+            })
+            if payout.create():
+                self.payment_id = payout.batch_header.payout_batch_id
+                self.status = 'completed'
+            else:
+                self.status = 'failed'
+                raise ValueError(payout.error)
+        
         elif self.method == 'bank':
-            # Placeholder for bank transfer
+            # Placeholder for bank transfer (e.g., Stripe Connect)
             self.payment_id = f"bank_{self.id}"
-            self.status = 'completed'
+            self.status = 'completed' # Simulate for now
 
-        self.user.balance -= self.amount
-        self.user.save()
+        if self.status == 'completed':
+            BalanceTransaction.objects.bulk_create([
+                BalanceTransaction(user=self.user, amount=-self.amount, transaction_type='payout', source=source),
+                BalanceTransaction(user=self.user, amount=-payout_fee, transaction_type='payout_fee', source=source)
+            ])
         self.save()
 
     def __str__(self):

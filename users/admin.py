@@ -33,12 +33,12 @@ class UserEmoteForm(forms.ModelForm):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'display_name', 'email', 'twitch_id', 'is_staff', 'is_superuser')
+    list_display = ('username', 'display_name', 'email', 'twitch_id', 'balance_display', 'is_staff', 'is_superuser')
     list_filter = ('is_staff', 'is_superuser')
     search_fields = ('username', 'display_name', 'email', 'twitch_id')
-    readonly_fields = ('twitch_id', 'changes_log', 'date_joined', 'last_login')
+    readonly_fields = ('twitch_id', 'balance_display', 'changes_log', 'date_joined', 'last_login')
     fieldsets = (
-        (None, {'fields': ('username', 'display_name', 'email', 'twitch_id')}),
+        (None, {'fields': ('username', 'display_name', 'email', 'twitch_id', 'paypal_email')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Roles', {
             'fields': ('is_artist', 'is_developer', 'is_founder'),
@@ -46,9 +46,14 @@ class UserAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Emotes', {'fields': ('emotes',)}),
+        ('Financials', {'fields': ('balance_display',)}),
         ('Logs', {'fields': ('changes_log',)}),
         ('Dates', {'fields': ('date_joined', 'last_login')}),
     )
+
+    def balance_display(self, obj):
+        return f"{obj.balance:.2f}"
+    balance_display.short_description = "Balance"
 
     def save_model(self, request, obj, form, change):
         if not request.user.is_superuser:

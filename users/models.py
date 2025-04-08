@@ -4,6 +4,7 @@ from django.utils import timezone
 import json
 from django.db.utils import OperationalError
 from django.apps import apps
+from decimal import Decimal
 
 class User(AbstractUser):
     # Core fields from Twitch
@@ -13,9 +14,11 @@ class User(AbstractUser):
     display_name = models.CharField(max_length=150, blank=True, null=True, help_text="Display name from Twitch")
     twitch_channel_url = models.URLField(blank=False, null=False, help_text="Twitch channel URL")
 
+    # PayPal email
+    paypal_email = models.EmailField(blank=True, null=True, help_text="PayPal email for payouts")
+
     # EmoteRush-specific fields
     emotes = models.TextField(default='{}', help_text="JSON of emote counts, e.g., {'pity1': 1, 'common1': 3}")     # JSON: {"ER:pity1": 1}
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)    # For payouts
 
     # Roll designations
     is_artist = models.BooleanField(default=False, help_text="User is an Artist, gets all artist emotes")
@@ -34,6 +37,11 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=['date_created'], name='idx_date_created'),
         ]
+
+    @property
+    def balance(self):
+        """ Calculate current balance from BalanceTransactions. """
+        return sum(tx.amount for tx in self.balance_transactions.all()) or Decimal('0.00')
 
     def get_emotes(self):
         return json.loads(self.emotes)

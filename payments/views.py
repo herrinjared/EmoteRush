@@ -61,7 +61,12 @@ def request_payout(request):
         payout = Payout(user=user, amount=Decimal(amount), method=method)
         payout.process_payout()
 
-        return JsonResponse({'message': 'Payout requested', 'payout_id': payout.id})
+        return JsonResponse({
+            'message': 'Payout requested',
+            'payout_id': payout.id,
+            'net_amount': f"{payout.net_amount():.2f}",
+            'fee': f"{payout.calculate_payout_fee():.2f}"
+        })
 
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
