@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from .models import Donation, Payout
 from decimal import Decimal
+import stripe
+from django.conf import settings
 
 @csrf_exempt
 @require_POST
@@ -72,3 +74,20 @@ def request_payout(request):
         return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+def create_stripe_account(request):
+    if request.method == 'POST':
+        account = stripe.Account.create(
+            type='express',
+            email=request.user.email,
+            capabilities={"transfers": {"requested": True}},
+        )
+        request.user.stripe_account_id = account.id
+        request.user.save()
+        account_link = stripe.AccountLink.create(
+            account=account.id,
+            refresh_url='http://localhost:8000/refresh',
+            return_url='http://localhost:8000/success',
+            type='account_onboarding',
+        )
+        return JsonResponse({'url': account_link.url})

@@ -14,8 +14,9 @@ class User(AbstractUser):
     display_name = models.CharField(max_length=150, blank=True, null=True, help_text="Display name from Twitch")
     twitch_channel_url = models.URLField(blank=False, null=False, help_text="Twitch channel URL")
 
-    # PayPal email
+    # Payment fields
     paypal_email = models.EmailField(blank=True, null=True, help_text="PayPal email for payouts")
+    stripe_account_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Connect account ID for bank payouts")
 
     # EmoteRush-specific fields
     emotes = models.TextField(default='{}', help_text="JSON of emote counts, e.g., {'pity1': 1, 'common1': 3}")     # JSON: {"ER:pity1": 1}

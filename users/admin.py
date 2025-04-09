@@ -38,7 +38,7 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ('username', 'display_name', 'email', 'twitch_id')
     readonly_fields = ('twitch_id', 'balance_display', 'changes_log', 'date_joined', 'last_login')
     fieldsets = (
-        (None, {'fields': ('username', 'display_name', 'email', 'twitch_id', 'paypal_email')}),
+        (None, {'fields': ('username', 'display_name', 'email', 'twitch_id', 'paypal_email', 'stripe_account_id')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Roles', {
             'fields': ('is_artist', 'is_developer', 'is_founder'),

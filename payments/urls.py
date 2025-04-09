@@ -8,4 +8,5 @@ urlpatterns = [
     # Placeholder for PayPal redirect handling
     path('success/', lambda request: JsonResponse({'message': 'Payment successful'}), name='success'),
     path('cancel/', lambda request: JsonResponse({'message': 'Payment cancelled'}, status=400), name='cancel'),
+    path('create-stripe-account/', views.create_stripe_account, name='create_stripe_account'),
 ]

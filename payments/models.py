@@ -253,14 +253,14 @@ class Payout(models.Model):
             raise ValueError("Insufficient balance")
         if self.amount < Decimal('1.00'):
             raise ValueError("Minimum payout is $1.00")
-        if not self.user.paypal_email and self.method == 'paypal':
-            raise ValueError("PayPal email required for payout")
         
         source = f"Payout #{self.id}"
         payout_fee = self.calculate_payout_fee()
         net_amount = self.net_amount()
 
         if self.method == 'paypal':
+            if not self.user.paypal_email:
+                raise ValueError("PayPal email required for payout")
             payout = paypalrestsdk.Payout({
                 "sender_batch_header": {
                     "email_subject": "EmoteRush Payout",
@@ -281,9 +281,20 @@ class Payout(models.Model):
                 raise ValueError(payout.error)
         
         elif self.method == 'bank':
-            # Placeholder for bank transfer (e.g., Stripe Connect)
-            self.payment_id = f"bank_{self.id}"
-            self.status = 'completed' # Simulate for now
+            if not self.user.stripe_account_id:
+                raise ValueError("Stripe account ID required for bank payout")
+            try:
+                transfer = stripe.Transfer.create(
+                    amount=int(net_amount * 100),  # Convert to cents
+                    currency="usd",
+                    destination=self.user.stripe_account_id,
+                    description=f"Payout of ${net_amount:.2f} after ${payout_fee:.2f} fee."
+                )
+                self.payment_id = transfer.id
+                self.status = 'completed'
+            except stripe.error.StripeError as e:
+                self.status = 'failed'
+                raise ValueError(f"Stripe transfer failed: {str(e)}")
 
         if self.status == 'completed':
             BalanceTransaction.objects.bulk_create([
