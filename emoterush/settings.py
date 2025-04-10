@@ -1,9 +1,14 @@
 from pathlib import Path
-from .secrets import *
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY
+# Security settings
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
@@ -69,12 +74,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'emoterush.wsgi.application'
 ASGI_APPLICATION = 'emoterush.asgi.application'
 
+# Database settings
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'emoterush',
         'USER': 'postgres',
-        'PASSWORD': POSTGRES_PASSWORD,
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -111,8 +117,8 @@ AUTHENTICATION_BACKENDS = [
 SOCIALACCOUNT_PROVIDERS = {
     'twitch': {
         'APP': {
-            'client_id': TWITCH_CLIENT_ID,
-            'secret': TWITCH_SECRET,
+            'client_id': os.environ.get('TWITCH_CLIENT_ID'),
+            'secret': os.environ.get('TWITCH_SECRET'),
             'key': '',
         },
         'SCOPE': ['user:read:email'],
@@ -139,8 +145,13 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
 
-PAYPAL_CLIENT_ID
-PAYPAL_SECRET
-PAYPAL_MODE = 'sandbox'
-STRIPE_SECRET_KEY
-STRIPE_PUBLISHABLE_KEY
+# Twitch settings
+TWITCH_CLIENT_ID = os.environ.get('TWITCH_CLIENT_ID')
+TWITCH_SECRET = os.environ.get('TWITCH_SECRET')
+
+# Payment settings
+PAYPAL_CLIENT_ID = os.environ.get('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = os.environ.get('PAYPAL_SECRET')
+PAYPAL_MODE = os.environ.get('PAYPAL_MODE', 'sandbox')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
