@@ -33,12 +33,13 @@ class UserEmoteForm(forms.ModelForm):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'display_name', 'email', 'twitch_id', 'balance_display', 'is_staff', 'is_superuser')
+    list_display = ('username', 'display_name', 'email', 'twitch_id', 'balance_display', 'preferred_payout_method', 'agreed_to_terms', 'is_staff', 'is_superuser')
     list_filter = ('is_staff', 'is_superuser')
     search_fields = ('username', 'display_name', 'email', 'twitch_id')
     readonly_fields = ('twitch_id', 'balance_display', 'changes_log', 'date_joined', 'last_login')
     fieldsets = (
         (None, {'fields': ('username', 'display_name', 'email', 'twitch_id', 'paypal_email', 'stripe_account_id')}),
+        ('Payout Preferences', {'fields': ('preferred_payout_method', 'agreed_to_terms')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Roles', {
             'fields': ('is_artist', 'is_developer', 'is_founder'),

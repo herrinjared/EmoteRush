@@ -17,6 +17,14 @@ class User(AbstractUser):
     # Payment fields
     paypal_email = models.EmailField(blank=True, null=True, help_text="PayPal email for payouts")
     stripe_account_id = models.CharField(max_length=255, blank=True, null=True, help_text="Stripe Connect account ID for bank payouts")
+    preferred_payout_method = models.CharField(
+        max_length=20,
+        choices=(('paypal', 'PayPal'), ('bank', 'Bank Account')),
+        blank = True,
+        null = True,
+        help_text="User's preferred payout method"
+    )
+    agreed_to_terms = models.BooleanField(default=False, help_text="User has agreed to terms and conditions")
 
     # EmoteRush-specific fields
     emotes = models.TextField(default='{}', help_text="JSON of emote counts, e.g., {'pity1': 1, 'common1': 3}")     # JSON: {"ER:pity1": 1}

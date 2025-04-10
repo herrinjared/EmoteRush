@@ -238,9 +238,13 @@ class Payout(models.Model):
 
     def calculate_payout_fee(self):
         """ Estimate payout fee (simplified; adjust per processor rates). """
-        fee_rate = Decimal('0.029') # 2.9%
-        fixed_fee = Decimal('0.30') # $0.30
-        return (self.amount * fee_rate) + fixed_fee
+        if self.method == 'paypal':
+            # PayPal Payouts: 2% or $1, whichever is higher
+            fee = min(self.amount * Decimal('0.02'), Decimal('1.00'))
+        elif self.method == 'bank':
+            # Stripe Connect: 1.4% + $0.30
+            fee = (self.amount * Decimal('0.014')) + Decimal('0.30')
+        return fee
     
     def net_amount(self):
         """ Calculate amount user receives after fees. """
@@ -253,6 +257,8 @@ class Payout(models.Model):
             raise ValueError("Insufficient balance")
         if self.amount < Decimal('1.00'):
             raise ValueError("Minimum payout is $1.00")
+        if not self.user.agreed_to_terms:
+            raise ValueError("User must agree to terms and conditions")
         
         source = f"Payout #{self.id}"
         payout_fee = self.calculate_payout_fee()

@@ -5,7 +5,6 @@ from django.views.decorators.http import require_POST
 from .models import Donation, Payout
 from decimal import Decimal
 import stripe
-from django.conf import settings
 
 @csrf_exempt
 @require_POST
@@ -21,7 +20,7 @@ def donate(request):
         if not all([streamer_id, amount, payment_method, payment_token]):
             return JsonResponse({'error': 'Missing required fields'}, status=400)
 
-        streamer = donor.__class__.objects.get(id=streamer_id)  # Use same model as donor
+        streamer = donor.__class__.objects.get(id=streamer_id)
         if streamer == donor:
             return JsonResponse({'error': 'Cannot donate to yourself'}, status=400)
 
@@ -30,7 +29,7 @@ def donate(request):
             streamer=streamer,
             amount=Decimal(amount),
             payment_method=payment_method,
-            payment_id="temp"  # Temporary, updated in process_payment
+            payment_id="temp"
         )
         donation.process_payment(payment_token)
         unlocked_emotes = donation.unlock_emotes()
@@ -74,11 +73,26 @@ def request_payout(request):
         return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
-def create_stripe_account(request):
-    if request.method == 'POST':
+
+@login_required
+@require_POST
+def connect_paypal(request):
+    try:
+        paypal_email = request.POST.get('paypal_email')
+        if not paypal_email:
+            return JsonResponse({'error': 'PayPal email required'}, status=400)
+        request.user.paypal_email = paypal_email
+        request.user.save()
+        return JsonResponse({'message': 'PayPal account connected'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_POST
+def connect_stripe(request):
+    try:
         account = stripe.Account.create(
-            type='express',
+            type="express",
             email=request.user.email,
             capabilities={"transfers": {"requested": True}},
         )
@@ -86,8 +100,42 @@ def create_stripe_account(request):
         request.user.save()
         account_link = stripe.AccountLink.create(
             account=account.id,
-            refresh_url='http://localhost:8000/refresh',
-            return_url='http://localhost:8000/success',
-            type='account_onboarding',
+            refresh_url="http://localhost:8000/payments/refresh/",
+            return_url="http://localhost:8000/payments/success/",
+            type="account_onboarding",
         )
         return JsonResponse({'url': account_link.url})
+    except stripe.error.StripeError as e:
+        return JsonResponse({'error': f"Stripe error: {str(e)}"}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_POST
+def set_preferred_payout(request):
+    try:
+        method = request.POST.get('method')
+        if method not in ['paypal', 'bank']:
+            return JsonResponse({'error': 'Invalid method'}, status=400)
+        if method == 'paypal' and not request.user.paypal_email:
+            return JsonResponse({'error': 'Connect PayPal account first'}, status=400)
+        if method == 'bank' and not request.user.stripe_account_id:
+            return JsonResponse({'error': 'Connect bank account via Stripe first'}, status=400)
+        request.user.preferred_payout_method = method
+        request.user.save()
+        return JsonResponse({'message': f"Preferred payout method set to {method}"})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_POST
+def agree_to_terms(request):
+    try:
+        agreed = request.POST.get('agreed') == 'true'
+        if not agreed:
+            return JsonResponse({'error': 'You must agree to the terms'}, status=400)
+        request.user.agreed_to_terms = True
+        request.user.save()
+        return JsonResponse({'message': 'Terms agreed'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
