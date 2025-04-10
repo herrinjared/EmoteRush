@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from .models import Donation, Payout
 from decimal import Decimal
 import stripe
+from django.shortcuts import get_object_or_404
+from users.models import User
 
 @csrf_exempt
 @require_POST
@@ -83,7 +85,11 @@ def connect_paypal(request):
             return JsonResponse({'error': 'PayPal email required'}, status=400)
         request.user.paypal_email = paypal_email
         request.user.save()
-        return JsonResponse({'message': 'PayPal account connected'})
+        donation_link = request.user.donation_link
+        return JsonResponse({
+            'message': 'PayPal account connected',
+            'donation_link': donation_link if donation_link else 'Complete setup to get your donation link'
+        })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
@@ -104,7 +110,11 @@ def connect_stripe(request):
             return_url="http://localhost:8000/payments/success/",
             type="account_onboarding",
         )
-        return JsonResponse({'url': account_link.url})
+        donation_link = request.user.donation_link
+        return JsonResponse({
+            'url': account_link.url,
+            'donation_link': donation_link if donation_link else 'Complete setup to get your donation link'
+        })
     except stripe.error.StripeError as e:
         return JsonResponse({'error': f"Stripe error: {str(e)}"}, status=500)
     except Exception as e:
@@ -137,5 +147,56 @@ def agree_to_terms(request):
         request.user.agreed_to_terms = True
         request.user.save()
         return JsonResponse({'message': 'Terms agreed'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@csrf_exempt
+@require_GET
+def get_donation_link(request):
+    """ Return the user's donation link if available. """
+    donation_link = request.user.donation_link
+    if donation_link:
+        return JsonResponse({'donation_link': donation_link})
+    else:
+        return JsonResponse({'error': 'Complete payment setup and terms agreement to get your donation link'}, status=400)
+    
+@csrf_exempt
+@require_POST
+@login_required
+def donate_to_username(request, username):
+    """ Handle donations via a custom link. """
+    try:
+        streamer = get_object_or_404(User, username = username.lstrip('@'))
+        if not streamer.donation_link:
+            return JsonResponse({'error': 'This user is not accepting donations'}, status=400)
+        if request.user == streamer:
+            return JsonResponse({'error': 'Cannot donate to yourself'}, status=400)
+        
+        amount = request.POST.get('amount')
+        payment_method = request.POST.get('payment_method')
+        payment_token = request.POST.get('payment_token')
+
+        if not all([amount, payment_method, payment_token]):
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
+        
+        donation = Donation(
+            donor=request.user,
+            streamer=streamer,
+            amount=Decimal(amount),
+            payment_method=payment_method,
+            payment_id="temp"
+        )
+        donation.process_payment(payment_token)
+        unlocked_emotes = donation.unlock_emotes()
+        donation.distribute_funds()
+
+        return JsonResponse({
+            'message': f"Donation to {username} successful",
+            'unlocked_emotes': unlocked_emotes,
+            'donation_id': donation.id
+        })
+    
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

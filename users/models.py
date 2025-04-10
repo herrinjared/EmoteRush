@@ -5,6 +5,7 @@ import json
 from django.db.utils import OperationalError
 from django.apps import apps
 from decimal import Decimal
+from django.conf import settings
 
 class User(AbstractUser):
     # Core fields from Twitch
@@ -51,6 +52,14 @@ class User(AbstractUser):
     def balance(self):
         """ Calculate current balance from BalanceTransactions. """
         return sum(tx.amount for tx in self.balance_transactions.all()) or Decimal('0.00')
+    
+    @property
+    def donation_link(self):
+        """ Generate custom donation link if payment method and terms are set. """
+        if self.agreed_to_terms and (self.paypal_email or self.stripe_account_id):
+            base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+            return f"{base_url}/donate/@{self.username}/"
+        return None
 
     def get_emotes(self):
         return json.loads(self.emotes)
