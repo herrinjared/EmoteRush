@@ -57,6 +57,10 @@ class UserAdmin(admin.ModelAdmin):
         return f"{obj.balance:.2f}"
     balance_display.short_description = "Balance"
 
+    def donation_link_display(self, obj):
+        return obj.donation_link or "Not available (requiures payment setup and terms agreement)"
+    donation_link_display.short_description = "Donation Link"
+
     def save_model(self, request, obj, form, change):
         if not request.user.is_superuser:
             # Non-superusers can't edit roles
